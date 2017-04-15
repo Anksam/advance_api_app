@@ -2,7 +2,9 @@ module Api
   module V1
 
     class PostsController < ApplicationController
+      include ActionController::HttpAuthentication::Token::ControllerMethods
       before_action :set_post, only: [:show, :update, :destroy]
+      before_action :authenticate, only: [:create, :destroy]
 
       # GET /posts
       def index
@@ -18,10 +20,10 @@ module Api
 
       # POST /posts
       def create
-        @post = Post.new(post_params)
+        @post = @user.posts.new(post_params)
 
         if @post.save
-          render json: @post, status: :created, location: @post
+          render json: @post, status: :created
         else
           render json: @post.errors, status: :unprocessable_entity
         end
@@ -42,6 +44,12 @@ module Api
       end
 
       private
+
+        def authenticate
+          authenticate_or_request_with_http_token do |token, options|
+            @user = User.find_by(token: token)
+          end
+        end
         # Use callbacks to share common setup or constraints between actions.
         def set_post
           @post = Post.find(params[:id])
@@ -49,7 +57,7 @@ module Api
 
         # Only allow a trusted parameter "white list" through.
         def post_params
-          params.require(:post).permit(:title, :body, :user_id)
+          params.require(:post).permit(:title, :body)
         end
     end
 
