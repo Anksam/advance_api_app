@@ -27,5 +27,5 @@ response = client.delete do |req|
   req.headers['Content-Type'] = 'application/json'
 end
 
-#puts Oj.load(response.body)
+puts Oj.load(response.body)
 puts response.status
